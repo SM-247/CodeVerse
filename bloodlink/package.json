@@ -1,0 +1,19 @@
+{
+  "name": "bloodlink",
+  "version": "1.0.0",
+  "description": "Predictive hospital-to-hospital blood coordination system",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && node server.js",
+    "client": "cd frontend && npm run dev",
+    "backend-only": "cd backend && node server.js"
+  },
+  "keywords": ["blood-bank", "hospital", "coordination", "predictive"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
