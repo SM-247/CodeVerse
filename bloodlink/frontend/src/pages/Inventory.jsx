@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import HospitalSwitcher from '../components/HospitalSwitcher';
 import InventoryCard from '../components/InventoryCard';
 
 export default function Inventory() {
-  const [hospital, setHospital] = useState('citycare');
-  const [inventory, setInventory] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
+  const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Update modal states
+  const [showModal, setShowModal] = useState(false);
+  const [selectedType, setSelectedType] = useState('');
+  const [newUnits, setNewUnits] = useState('');
 
   const API_BASE = 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchInventory();
-  }, [hospital]);
+  }, []);
 
   const fetchInventory = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE}/${hospital}/inventory`);
+      const response = await axios.get(`${API_BASE}/inventory`);
       setInventory(response.data);
       setLoading(false);
     } catch (error) {
@@ -27,10 +29,33 @@ export default function Inventory() {
     }
   };
 
-  const getBloodGroups = () => {
-    return ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].filter(
-      bg => !searchTerm || bg.includes(searchTerm.toUpperCase())
-    );
+  const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+
+  const getUnitsForType = (type) => {
+    const entry = inventory.find((item) => item.type === type);
+    return entry ? entry.units : 0;
+  };
+
+  // When clicking UPDATE on card
+  const handleUpdateClick = (type, units) => {
+    setSelectedType(type);
+    setNewUnits(units);
+    setShowModal(true);
+  };
+
+  // Save update → POST to backend
+  const handleSaveUpdate = async () => {
+    try {
+      await axios.post(`${API_BASE}/inventory/update`, {
+        type: selectedType,
+        units: Number(newUnits),
+      });
+
+      setShowModal(false);
+      fetchInventory(); // refresh UI
+    } catch (err) {
+      console.error('Update failed:', err);
+    }
   };
 
   if (loading) {
@@ -39,31 +64,61 @@ export default function Inventory() {
 
   return (
     <div className="bg-gray-50">
+      {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Blood Inventory</h1>
-            <HospitalSwitcher hospital={hospital} setHospital={setHospital} />
-          </div>
-          <input
-            type="text"
-            placeholder="Search blood type..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900">Blood Inventory</h1>
+      </div>
 
-        <div className="p-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {getBloodGroups().map(bg => (
-              <InventoryCard
-                key={bg}
-                bloodType={bg}
-                units={inventory[bg] || 0}
-              />
-            ))}
+      {/* Inventory Grid */}
+      <div className="p-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {BLOOD_GROUPS.map((bg) => (
+            <InventoryCard
+              key={bg}
+              bloodType={bg}
+              units={getUnitsForType(bg)}
+              onUpdateClick={handleUpdateClick}   // <-- REQUIRED
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* UPDATE MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+            <h2 className="text-xl font-bold mb-4">Update {selectedType}</h2>
+
+            <input
+              type="number"
+              value={newUnits}
+              onChange={(e) => setNewUnits(e.target.value)}
+              className="w-full border p-2 rounded mb-4"
+            />
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSaveUpdate}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
     </div>
   );
 }
+
+
+
+

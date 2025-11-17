@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function InventoryCard({ bloodType, units }) {
+export default function InventoryCard({ bloodType, units, onUpdateClick }) {
   const getStatus = (units) => {
     if (units > 8) return 'optimal';
     if (units > 4) return 'low';
@@ -40,10 +40,22 @@ export default function InventoryCard({ bloodType, units }) {
       <div className="text-center">
         <div className="text-lg font-bold text-gray-900 mb-2">{bloodType}</div>
         <div className="text-2xl font-bold text-gray-900 mb-3">{units}</div>
-        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeColor(status)}`}>
+
+        <span
+          className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusBadgeColor(status)}`}
+        >
           {status === 'optimal' ? 'Optimal' : status === 'low' ? 'Low Stock' : 'Critical'}
         </span>
+
+        {/* UPDATE BUTTON */}
+        <button
+          onClick={() => onUpdateClick(bloodType, units)}
+          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition"
+        >
+          Update
+        </button>
       </div>
     </div>
   );
 }
+
